@@ -53,7 +53,7 @@ class train_test_unit(object):
 """Crowd counting dataset"""
 
 class UCF_CC_50(object):
-    root = '/workspace/quispe/ucf_cc_50'
+    root = './data/ucf_cc_50'
     ori_dir = osp.join(root, 'UCF_CC_50')
     ori_dir_lab = osp.join(ori_dir, 'labels')
     ori_dir_img = osp.join(ori_dir, 'images')
@@ -168,7 +168,7 @@ class UCF_CC_50(object):
                 copy_to_directory(test_img_paths, fold_test_dir_img)
 
 class ShanghaiTech(object):
-    root = '/workspace/quispe/ShanghaiTech/'
+    root = './data/ShanghaiTech/'
     ori_dir_partA = osp.join(root, 'part_A')
     ori_dir_partA_train = osp.join(ori_dir_partA, 'train_data')
     ori_dir_partA_train_mat = osp.join(ori_dir_partA_train, 'ground-truth')
