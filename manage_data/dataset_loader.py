@@ -12,7 +12,6 @@ import os.path as osp
 from scipy.io import loadmat
 import numpy as np
 import h5py
-from scipy.misc import imsave
 import scipy.io as sio
 
 from manage_data.get_density_map import create_density_map
