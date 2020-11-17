@@ -32,9 +32,9 @@ def resize(data, scale):
 	return data
 
 def copy_to_directory(files_list, output_dir):
+
     for file in files_list:
-        file_name = file.replace('\\', '/')
-        file_name = file.split('/')[-1]
+        file_name = osp.split(file)[-1]
         out_file_path = osp.join(output_dir, file_name)
         copyfile(file, out_file_path)
 
