@@ -32,7 +32,7 @@ parser.add_argument('--not-augment-light', action='store_true', help="use bright
 parser.add_argument('--bright', default=10, type=int, help="bright value for bright & contrast augmentation, defaul 10")
 parser.add_argument('--contrast', default=10, type=int, help="contrast value for bright & contrast augmentation, defaul 10")
 parser.add_argument('--gt-mode', type=str, default='same', help="mode for generation of ground thruth  ['same', 'face', 'knn'] (default 'same')")
-parser.add_argument('--model', type=str, default='mcnn-1', help="network model  ['mcnn1', 'mcnn2', 'mcnn3', 'mcnn4'] (default 'mcnn-1')")
+parser.add_argument('--model', type=str, default='mcnn1', help="network model  ['mcnn1', 'mcnn2', 'mcnn3', 'mcnn4'] (default 'mcnn-1')")
 
 # Optimization options
 parser.add_argument('--max-epoch', default=1000, type=int,
