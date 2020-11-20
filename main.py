@@ -3,6 +3,7 @@ import os.path as osp
 import torch
 import numpy as np
 import sys
+import pickle
 
 from architecture.crowd_count import CrowdCounter
 from architecture import network
@@ -84,16 +85,22 @@ def train(train_test_unit, out_dir_root):
         torch.manual_seed(rand_seed)
         torch.cuda.manual_seed(rand_seed)
 
+    best_mae = sys.maxsize # best mae
+
     # load net
     net = CrowdCounter(model = args.model)
     if not args.resume :
         network.weights_normal_init(net, dev=0.01)
+
     else:
         if args.resume[-3:] == '.h5':
             pretrained_model = args.resume
         else:
             resume_dir = osp.join(args.resume, train_test_unit.metadata['name'])
             pretrained_model = osp.join(resume_dir, 'best_model.h5')
+            f = open(osp.join(resume_dir, "best_mae.bin"), "rb")
+            best_mae = pickle.load(f)
+            f.close()
         network.load_net(pretrained_model, net)
         print('Will apply fine tunning over', pretrained_model)
     net.cuda()
@@ -110,7 +117,7 @@ def train(train_test_unit, out_dir_root):
 
     data_loader = ImageDataLoader(train_path, train_gt_path, shuffle=True, batch_size = args.train_batch)
     data_loader_val = ImageDataLoader(val_path, val_gt_path, shuffle=False, batch_size = 1)
-    best_mae = sys.maxsize
+    
 
     for epoch in range(start_step, end_step+1):
         step = 0
@@ -156,6 +163,10 @@ def train(train_test_unit, out_dir_root):
             best_mse = mse
             best_model = '{}_{}_{}.h5'.format(train_test_unit.to_string(),dataset_name,epoch)
             network.save_net(os.path.join(output_dir, "best_model.h5"), net)
+            f = open(os.path.join(output_dir, "best_mae.bin"), "wb")
+            pickle.dump(best_mae, f)
+            f.close()
+
 
         print("Epoch: {0}, MAE: {1:.4f}, MSE: {2:.4f}, loss: {3:.4f}".format(epoch, mae, mse, train_loss))
         print("Best MAE: {0:.4f}, Best MSE: {1:.4f}, Best model: {2}".format(best_mae, best_mse, best_model))
