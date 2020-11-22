@@ -404,11 +404,67 @@ class ShanghaiTech(object):
             copy_to_directory(test_lab_paths, test_dir_partB_lab)
             copy_to_directory(test_den_paths, test_dir_partB_den)
 
+
+class JhuCrowd(object):
+    root = "./data/jhu_crowd_v2.0"
+    ori_train_img = osp.join(root, "train/images")
+    ori_train_gt = osp.join(root, "train/gt")
+    ori_val_img = osp.join(root, "val/images")
+    ori_val_gt = osp.join(root, "val/gt")
+    ori_test_img = osp.join(root, "test/images")
+    ori_test_gt = osp.join(root, "test/gt")
+
+    def __init__(self, force_create_den_maps = False, force_augmentation = False, **kwargs):
+        self._check_before_run()
+        self.metadata = kwargs
+        self._create_labels()
+        self._create_original_density_maps(force_create_den_maps)
+        self._create_train_test(force_augmentation, **kwargs)
+
+
+    def _check_before_run(self):
+        if not osp.exists(self.root):
+            raise RuntimeError("{} doesn't exists".format(self.root))
+        if not osp.exists(self.ori_train_img):
+            raise RuntimeError("{} doesn't exists".format(self.ori_train_img))
+        if not osp.exists(self.ori_train_gt):
+            raise RuntimeError("{} doesn't exists".format(self.ori_train_gt))
+        if not osp.exists(self.ori_val_img):
+            raise RuntimeError("{} doesn't exists".format(self.ori_val_img))
+        if not osp.exists(self.ori_val_gt):
+            raise RuntimeError("{} doesn't exists".format(self.ori_val_gt))
+        if not osp.exists(self.ori_test_img):
+            raise RuntimeError("{} doesn't exists".format(self.ori_test_img))
+        if not osp.exists(self.ori_test_gt):
+            raise RuntimeError("{} doesn't exists".format(self.ori_test_gt))
+
+    def _create_labels(self):
+        """
+        to implment
+        - creates json labels using csv label
+        """
+        pass
+
+    def _create_original_density_maps(self, force_create_den_maps):
+        """
+        to implment
+        - creates ground truth density maps
+        """
+        pass
+
+    def _create_train_test(self, force_augmentation, **kwargs):
+        """
+        to implment
+        - creates train and test unit (plus validation)
+        """ 
+        pass
+
 """Create dataset"""
 
 __factory = {
     'ucf-cc-50': UCF_CC_50,
-    'shanghai-tech': ShanghaiTech
+    'shanghai-tech': ShanghaiTech,
+    "jhu_crowd": JhuCrowd
 }
 
 def get_names():
