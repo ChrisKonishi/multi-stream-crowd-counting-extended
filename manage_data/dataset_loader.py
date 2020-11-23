@@ -412,10 +412,13 @@ class JhuCrowd(object):
     root = "./data/jhu_crowd_v2.0"
     ori_train_img = osp.join(root, "train/images")
     ori_train_gt = osp.join(root, "train/gt")
+    ori_train_fac = osp.join(root, "train/faces")
     ori_val_img = osp.join(root, "val/images")
     ori_val_gt = osp.join(root, "val/gt")
+    ori_val_fac = osp.join(root, "val/faces")
     ori_test_img = osp.join(root, "test/images")
     ori_test_gt = osp.join(root, "test/gt")
+    ori_test_fac = osp.join(root, "test/faces")
 
     # to be computed
     ori_train_lab = osp.join(root, "train/labels")
@@ -458,13 +461,13 @@ class JhuCrowd(object):
         mkdir_if_missing(self.ori_test_den)
 
         #convert csv to json
-        if len(os.listdir(self.ori_train_gt) != os.listdir(self.ori_train_lab)):
+        if len(os.listdir(self.ori_train_gt)) != len(os.listdir(self.ori_train_lab)):
             _csv_to_json(self.ori_train_gt, self.ori_train_lab)
 
-        if len(os.listdir(self.ori_val_gt) != os.listdir(self.ori_val_lab)):
+        if len(os.listdir(self.ori_val_gt)) != len(os.listdir(self.ori_val_lab)):
             _csv_to_json(self.ori_val_gt, self.ori_val_lab)
 
-        if len(os.listdir(self.ori_test_gt) != os.listdir(self.ori_test_lab)):
+        if len(os.listdir(self.ori_test_gt)) != len(os.listdir(self.ori_test_lab)):
             _csv_to_json(self.ori_test_gt, self.ori_test_lab)
 
 
@@ -494,12 +497,16 @@ class JhuCrowd(object):
         mkdir_if_missing(self.ori_train_den)
         mkdir_if_missing(self.ori_val_den)
         mkdir_if_missing(self.ori_test_den)
-        """
-        to implement
-        - creates ground truth density maps
-        """
 
-        pass
+        if len(os.listdir(self.ori_train_den)) != len(os.listdir(self.ori_train_gt)):
+            create_density_map(self.ori_train_img, self.ori_train_lab, self.ori_train_den, self.ori_train_fac, mode=self.metadata["gt_mode"])
+
+        if len(os.listdir(self.ori_val_den)) != len(os.listdir(self.ori_val_gt)):
+            create_density_map(self.ori_val_img, self.ori_val_lab, self.ori_val_den, self.ori_val_fac, mode=self.metadata["gt_mode"])
+
+        if len(os.listdir(self.ori_test_den)) != len(os.listdir(self.ori_test_gt)):
+            create_density_map(self.ori_test_img, self.ori_test_lab, self.ori_test_den, self.ori_test_fac, mode=self.metadata["gt_mode"])
+            
 
     def _create_train_test(self, force_augmentation, **kwargs):
         """
