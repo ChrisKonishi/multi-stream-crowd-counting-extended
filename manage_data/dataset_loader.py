@@ -13,6 +13,9 @@ from scipy.io import loadmat
 import numpy as np
 import h5py
 import scipy.io as sio
+import pandas as pd
+from pandas.errors import EmptyDataError
+import json
 
 from manage_data.get_density_map import create_density_map
 from manage_data.utils import mkdir_if_missing, copy_to_directory
@@ -414,6 +417,14 @@ class JhuCrowd(object):
     ori_test_img = osp.join(root, "test/images")
     ori_test_gt = osp.join(root, "test/gt")
 
+    # to be computed
+    ori_train_lab = osp.join(root, "train/labels")
+    ori_train_den = osp.join(root, "train/density_maps")
+    ori_val_lab = osp.join(root, "val/labels")
+    ori_val_den = osp.join(root, "val/density_maps")
+    ori_test_lab = osp.join(root, "test/labels")
+    ori_test_den = osp.join(root, "test/density_maps")
+
     def __init__(self, force_create_den_maps = False, force_augmentation = False, **kwargs):
         self._check_before_run()
         self.metadata = kwargs
@@ -439,22 +450,60 @@ class JhuCrowd(object):
             raise RuntimeError("{} doesn't exists".format(self.ori_test_gt))
 
     def _create_labels(self):
-        """
-        to implment
-        - creates json labels using csv label
-        """
-        pass
+        mkdir_if_missing(self.ori_train_lab)
+        mkdir_if_missing(self.ori_train_den)
+        mkdir_if_missing(self.ori_val_lab)
+        mkdir_if_missing(self.ori_val_den)
+        mkdir_if_missing(self.ori_test_lab)
+        mkdir_if_missing(self.ori_test_den)
+
+        #convert csv to json
+        if len(os.listdir(self.ori_train_gt) != os.listdir(self.ori_train_lab)):
+            _csv_to_json(self.ori_train_gt, self.ori_train_lab)
+
+        if len(os.listdir(self.ori_val_gt) != os.listdir(self.ori_val_lab)):
+            _csv_to_json(self.ori_val_gt, self.ori_val_lab)
+
+        if len(os.listdir(self.ori_test_gt) != os.listdir(self.ori_test_lab)):
+            _csv_to_json(self.ori_test_gt, self.ori_test_lab)
+
+
+    def _csv_to_json(self, src, tgt):
+        files = os.listdir(src)
+        for i in files:
+            src_pth = osp.join(src, i)
+            name = osp.splitext(i)[0]
+            tgt_path = osp.join(tgt, name + ".json")
+
+            data = []
+            try:
+                csv_data = pd.read_csv(src_pth, sep=" ", header=None)
+                for i in range(len(csv_data)):
+                    x = csv_data.loc[i, 0]
+                    y = csv_data.loc[i, 1]
+                    d = {"y": y.item(), "x": x.item()}
+                    data.append(d)
+            except EmptyDataError:
+                pass
+            with open(tgt_path, "w") as out:
+                json.dump(data, out)
+                
+
 
     def _create_original_density_maps(self, force_create_den_maps):
+        mkdir_if_missing(self.ori_train_den)
+        mkdir_if_missing(self.ori_val_den)
+        mkdir_if_missing(self.ori_test_den)
         """
-        to implment
+        to implement
         - creates ground truth density maps
         """
+
         pass
 
     def _create_train_test(self, force_augmentation, **kwargs):
         """
-        to implment
+        to implement
         - creates train and test unit (plus validation)
         """ 
         pass
