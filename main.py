@@ -67,8 +67,8 @@ def train(train_test_unit, out_dir_root):
     dataset_name = train_test_unit.metadata['name']
     train_path = train_test_unit.train_dir_img
     train_gt_path = train_test_unit.train_dir_den
-    val_path =train_test_unit.test_dir_img
-    val_gt_path = train_test_unit.test_dir_den
+    val_path =train_test_unit.val_dir_img
+    val_gt_path = train_test_unit.val_dir_den
 
     #training configuration
     start_step = args.start_epoch

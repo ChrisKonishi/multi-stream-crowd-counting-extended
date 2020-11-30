@@ -33,6 +33,17 @@ class train_test_unit(object):
         self.train_dir_den = _train_dir_den
         self.test_dir_img = _test_dir_img
         self.test_dir_den = _test_dir_den
+
+        self.val = kwargs["val"]
+
+        if self.val:
+            self.val_dir_img = kwargs["val_dir_img"]
+            self.val_dir_den = kwargs["val_dir_den"]
+
+        else:
+            self.val_dir_img = _test_dir_img 
+            self.val_dir_den = _test_dir_den
+
         self._check_before_run()
         self.metadata = kwargs
 
@@ -46,6 +57,10 @@ class train_test_unit(object):
             raise RuntimeError("'{}' is not available".format(self.test_dir_img))
         if not osp.exists(self.test_dir_den):
             raise RuntimeError("'{}' is not available".format(self.test_dir_den))
+        if not osp.exists(self.val_dir_img):
+            raise RuntimeError("'{}' is not available".format(self.val_dir_img))
+        if not osp.exists(self.val_dir_den):
+            raise RuntimeError("'{}' is not available".format(self.val_dir_den))
 
     def to_string(self):
         return "_".join([ str(key) + "_" + str(value) for key, value in sorted(self.metadata.items()) if key != 'name'])
@@ -146,6 +161,7 @@ class UCF_CC_50(object):
             mkdir_if_missing(fold_test_dir_lab)
             
             kwargs['name'] = 'ucf-fold{}'.format(fold + 1)
+            kwargs["val"] = False
             train_test = train_test_unit(aug_train_dir_img, aug_train_dir_den, fold_test_dir_img, fold_test_dir_den, kwargs.copy())
             self.train_test_set.append(train_test)
 
@@ -346,6 +362,7 @@ class ShanghaiTech(object):
         mkdir_if_missing(test_dir_partA_lab)
 
         kwargs['name'] = 'shanghai-partA'
+        kwargs["val"] = False
         part_A_train_test = train_test_unit(aug_dir_partA_img, aug_dir_partA_den, test_dir_partA_img, test_dir_partA_den, kwargs.copy())
         self.train_test_set.append(part_A_train_test)
 
@@ -391,6 +408,7 @@ class ShanghaiTech(object):
         mkdir_if_missing(test_dir_partB_lab)
 
         kwargs['name'] = 'shanghai-partB'
+        kwargs["val"] = False
         part_B_train_test = train_test_unit(aug_dir_partB_img, aug_dir_partB_den, test_dir_partB_img, test_dir_partB_den, kwargs.copy())
         self.train_test_set.append(part_B_train_test)
 
@@ -427,6 +445,12 @@ class JhuCrowd(object):
     ori_val_den = osp.join(root, "val/density_maps")
     ori_test_lab = osp.join(root, "test/labels")
     ori_test_den = osp.join(root, "test/density_maps")
+
+    augmented_dir = ""
+    train_test_set = []
+    signature_args = ['people_thr', 'gt_mode']
+    metadata = dict()
+    train_test_size = 1
 
     def __init__(self, force_create_den_maps = False, force_augmentation = False, **kwargs):
         self._check_before_run()
@@ -507,13 +531,81 @@ class JhuCrowd(object):
         if len(os.listdir(self.ori_test_den)) != len(os.listdir(self.ori_test_gt)):
             create_density_map(self.ori_test_img, self.ori_test_lab, self.ori_test_den, self.ori_test_fac, mode=self.metadata["gt_mode"])
             
-
+    def signature(self):
+        return "_".join(["{}_{}".format(sign_elem, self.metadata[sign_elem]) for sign_elem in self.signature_args])
+    
     def _create_train_test(self, force_augmentation, **kwargs):
-        """
-        to implement
-        - creates train and test unit (plus validation)
-        """ 
-        pass
+        slide_window_params = {'displace' : kwargs['displace'], 'size_x' : kwargs['size_x'], 'size_y' : kwargs['size_y'], 'people_thr' : kwargs['people_thr']}
+        noise_params = {'augment_noise' : kwargs['augment_noise']}
+        light_params = {'augment_light' : kwargs['augment_light'], 'bright' : kwargs['bright'], 'contrast' : kwargs['contrast']}
+
+        self.augmented_dir = osp.join(self.root, self.signature())
+
+        # check if augmented data exists
+        augment_data = False
+        if osp.exists(self.augmented_dir):
+            print("'{}' already exists".format(self.augmented_dir))
+
+            if force_augmentation:
+                augment_data = True
+                print("augmenting data anyway, since force_augmentantion=True")
+
+            else:
+                augment_data = False
+                print("skipping augmentation, since force_augmentantion=False")
+
+        else:
+            augment_data = True
+            os.makedirs(self.augmented_dir)
+
+        #create new directories for augmentations
+        aug_dir_train_img = osp.join(self.augmented_dir, "train_img")
+        aug_dir_train_den = osp.join(self.augmented_dir, "train_den")
+        aug_dir_train_lab = osp.join(self.augmented_dir, "train_lab")
+        test_dir_img = osp.join(self.augmented_dir, "test_img")
+        test_dir_den = osp.join(self.augmented_dir, "test_den")
+        test_dir_lab = osp.join(self.augmented_dir, "test_lab")
+        val_dir_img = osp.join(self.augmented_dir, "val_img")
+        val_dir_den = osp.join(self.augmented_dir, "val_den")
+        val_dir_lab = osp.join(self.augmented_dir, "val_lab")
+        mkdir_if_missing(aug_dir_train_img)
+        mkdir_if_missing(aug_dir_train_den)
+        mkdir_if_missing(aug_dir_train_lab)
+        mkdir_if_missing(test_dir_img)
+        mkdir_if_missing(test_dir_den)
+        mkdir_if_missing(test_dir_lab)
+        mkdir_if_missing(val_dir_img)
+        mkdir_if_missing(val_dir_den)
+        mkdir_if_missing(val_dir_lab)
+        
+        kwargs['name'] = 'jhu_crowd'
+        kwargs["val"] = True
+        kwargs["val_dir_img"] = val_dir_img
+        kwargs["val_dir_den"] = val_dir_den
+        train_test = train_test_unit(aug_dir_train_img, aug_dir_train_den, test_dir_img, test_dir_den, kwargs.copy())
+
+        if augment_data:
+            ori_img_paths = [osp.join(self.ori_train_img, file_name) for file_name in sorted(os.listdir(self.ori_train_img))]
+            ori_lab_paths = [osp.join(self.ori_train_lab, file_name) for file_name in sorted(os.listdir(self.ori_train_lab))]
+            ori_den_paths = [osp.join(self.ori_train_den, file_name) for file_name in sorted(os.listdir(self.ori_train_den))]
+            augment(ori_img_paths, ori_lab_paths, ori_den_paths, aug_dir_train_img, aug_dir_train_lab, aug_dir_train_den, slide_window_params, noise_params, light_params)
+
+            test_img_paths = [osp.join(self.ori_test_img, file_name) for file_name in sorted(os.listdir(self.ori_test_img))]
+            test_lab_paths = [osp.join(self.ori_test_lab, file_name) for file_name in sorted(os.listdir(self.ori_test_lab))]
+            test_den_paths = [osp.join(self.ori_test_den, file_name) for file_name in sorted(os.listdir(self.ori_test_den))]
+            copy_to_directory(test_img_paths, test_dir_img)
+            copy_to_directory(test_lab_paths, test_dir_lab)
+            copy_to_directory(test_den_paths, test_dir_den)
+
+            val_img_paths = [osp.join(self.ori_val_img, file_name) for file_name in sorted(os.listdir(self.ori_val_img))]
+            val_lab_paths = [osp.join(self.ori_val_lab, file_name) for file_name in sorted(os.listdir(self.ori_val_lab))]
+            val_den_paths = [osp.join(self.ori_val_den, file_name) for file_name in sorted(os.listdir(self.ori_val_den))]
+            copy_to_directory(val_img_paths, val_dir_img)
+            copy_to_directory(val_lab_paths, val_dir_lab)
+            copy_to_directory(val_den_paths, val_dir_den)
+
+        self.train_test_set.append(train_test)
+
 
 """Create dataset"""
 
