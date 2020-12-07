@@ -165,20 +165,19 @@ def augment(img_paths, label_paths, den_paths, out_img_dir, out_lab_dir, out_den
 		count += 1
 		if count % 200 == 0:
 			print("imagens processadas: {}".format(count))
-			
+
 		img = cv2.imread(img_path)
 		den = np.load(den_path)
 		label = json.load(open(label_path))
 		
 		#sliding window for data data augmentation
-		if slide_window_params["augment_sliding_window"]:
-			aug_img_id = sliding_window(out_img_dir, out_lab_dir, out_den_dir, aug_img_id, img, label, den
-				, displace = slide_window_params['displace']
-				, size_x = slide_window_params['size_x']
-				, size_y = slide_window_params['size_y']
-				, people_thr = slide_window_params['people_thr'])
+		aug_img_id = sliding_window(out_img_dir, out_lab_dir, out_den_dir, aug_img_id, img, label, den
+			, displace = slide_window_params['displace']
+			, size_x = slide_window_params['size_x']
+			, size_y = slide_window_params['size_y']
+			, people_thr = slide_window_params['people_thr'])
 
-		if add_original or slide_window_params["augment_sliding_window"]==False:
+		if add_original:
 			#add original to augmented set
 			aug_img_id += 1
 			out_img_path = osp.join(out_img_dir, str(aug_img_id).zfill(7) + '.jpg')

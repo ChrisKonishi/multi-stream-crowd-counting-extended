@@ -63,7 +63,8 @@ class train_test_unit(object):
             raise RuntimeError("'{}' is not available".format(self.val_dir_den))
 
     def to_string(self):
-        return "_".join([ str(key) + "_" + str(value) for key, value in sorted(self.metadata.items()) if key != 'name'])
+        ignore = ["name", "val", "val_dir_img", "val_dir_den"]
+        return "_".join([ str(key) + "_" + str(value) for key, value in sorted(self.metadata.items()) if (key not in ignore)])
     
 """Dataset classes"""
 
@@ -111,7 +112,7 @@ class UCF_CC_50(object):
         return "_".join(["{}_{}".format(sign_elem, self.metadata[sign_elem]) for sign_elem in self.signature_args])
 
     def _create_train_test(self, force_augmentation, kwargs):
-        slide_window_params = {'augment_sliding_window' : kwargs['augment_sliding_window'] ,'displace' : kwargs['displace'], 'size_x' : kwargs['size_x'], 'size_y' : kwargs['size_y'], 'people_thr' : kwargs['people_thr']}
+        slide_window_params = {'displace' : kwargs['displace'], 'size_x' : kwargs['size_x'], 'size_y' : kwargs['size_y'], 'people_thr' : kwargs['people_thr']}
         noise_params = {'augment_noise' : kwargs['augment_noise']}
         light_params = {'augment_light' : kwargs['augment_light'], 'bright' : kwargs['bright'], 'contrast' : kwargs['contrast']}
 
@@ -329,7 +330,7 @@ class ShanghaiTech(object):
         return "_".join(["{}_{}".format(sign_elem, self.metadata[sign_elem]) for sign_elem in self.signature_args])
 
     def _create_train_test(self, force_augmentation, kwargs):
-        slide_window_params = {'augment_sliding_window' : kwargs['augment_sliding_window'] ,'displace' : kwargs['displace'], 'size_x' : kwargs['size_x'], 'size_y' : kwargs['size_y'], 'people_thr' : kwargs['people_thr']}
+        slide_window_params = {'displace' : kwargs['displace'], 'size_x' : kwargs['size_x'], 'size_y' : kwargs['size_y'], 'people_thr' : kwargs['people_thr']}
         noise_params = {'augment_noise' : kwargs['augment_noise']}
         light_params = {'augment_light' : kwargs['augment_light'], 'bright' : kwargs['bright'], 'contrast' : kwargs['contrast']}
 
@@ -536,7 +537,7 @@ class JhuCrowd(object):
         return "_".join(["{}_{}".format(sign_elem, self.metadata[sign_elem]) for sign_elem in self.signature_args])
     
     def _create_train_test(self, force_augmentation, **kwargs):
-        slide_window_params = {'augment_sliding_window' : kwargs['augment_sliding_window'] , 'displace' : kwargs['displace'], 'size_x' : kwargs['size_x'], 'size_y' : kwargs['size_y'], 'people_thr' : kwargs['people_thr']}
+        slide_window_params = {'displace' : kwargs['displace'], 'size_x' : kwargs['size_x'], 'size_y' : kwargs['size_y'], 'people_thr' : kwargs['people_thr']}
         noise_params = {'augment_noise' : kwargs['augment_noise']}
         light_params = {'augment_light' : kwargs['augment_light'], 'bright' : kwargs['bright'], 'contrast' : kwargs['contrast']}
 

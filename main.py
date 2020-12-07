@@ -30,7 +30,6 @@ parser.add_argument('--size-y', default=256, type=int, help="height of sliding w
 parser.add_argument('--people-thr', default=0, type=int, help="minimum quantitie of people in each sliding window in data augmentation, default 0")
 parser.add_argument('--not-augment-noise', action='store_true', help="use noise for data augmetnation, default True")
 parser.add_argument('--not-augment-light', action='store_true', help="use bright & contrast for data augmetnation, default True")
-parser.add_argument('--not-augment-sliding-window', action='store_true', help="use bright & contrast for data augmetnation, default True")
 parser.add_argument('--bright', default=10, type=int, help="bright value for bright & contrast augmentation, defaul 10")
 parser.add_argument('--contrast', default=10, type=int, help="contrast value for bright & contrast augmentation, defaul 10")
 parser.add_argument('--gt-mode', type=str, default='same', help="mode for generation of ground thruth  ['same', 'face', 'knn'] (default 'same')")
@@ -205,7 +204,6 @@ def main():
     force_augmentation = True if args.force_augment else False
     augment_noise = False if args.not_augment_noise else True 
     augment_light = False if args.not_augment_light else True
-    augment_sliding_window = False if args.not_augment_sliding_window else True
     augment_only = True if args.augment_only else False
     train_only = True if args.train_only else False
     skip_dir_check = True if args.skip_dir_check else False
@@ -214,7 +212,6 @@ def main():
     , force_create_den_maps = force_create_den_maps
     , force_augmentation = force_augmentation
     #sliding windows params
-    , augment_sliding_window = augment_sliding_window
     , gt_mode = args.gt_mode
     , displace = args.displace
     , size_x= args.size_x
