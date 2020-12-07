@@ -223,4 +223,4 @@ def create_density_map(imgs_path, labels_path, density_maps_path, det_faces_path
             img_den = get_density_map_gaussian(img.shape[:2], points, mode = mode, bb_faces = tiny_faces)
         else:
             img_den = get_density_map_gaussian(img.shape[:2], points, mode = mode)
-        np.save(density_map_path, img_den)
+        np.save(density_map_path, img_den.astype(np.float32))

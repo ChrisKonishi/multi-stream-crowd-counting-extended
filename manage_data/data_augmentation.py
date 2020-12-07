@@ -60,12 +60,12 @@ def add_noise(image, noise_type = 's&p'):
 		# Salt mode
 		num_salt = np.ceil(amount * image.size * s_vs_p)
 		coords = [np.random.randint(0, i - 1, int(num_salt)) for i in image.shape]
-		out[coords] = 1
+		out[tuple(coords)] = 1
 
 		# Pepper mode
 		num_pepper = np.ceil(amount* image.size * (1. - s_vs_p))
 		coords = [np.random.randint(0, i - 1, int(num_pepper)) for i in image.shape]
-		out[coords] = 0
+		out[tuple(coords)] = 0
 		return out
 	else:
 		raise RuntimeError("'{}' is not a valid noise type".format(noise_type))
@@ -137,7 +137,7 @@ def sliding_window(out_img_dir, out_lab_dir, out_den_dir, img_id, img, labels, d
 			hasHeads[int(labels[i]['y']), int(labels[i]['x'])] = 1
 			position[int(labels[i]['y']), int(labels[i]['x'])] = i
 		else:
-			print("Warning: image '{}' has shape {}, and label is in position ({}, {})".format(img_id, img.shape, int(labels[i]['y']), int(labels[i]['x'])))
+			print("Warning: image '{}' has shape {}, and label is in position ({}, {}).".format(img_id, img.shape, int(labels[i]['y']), int(labels[i]['x'])))
 
 	for i in range(0, img.shape[0], displace): 
 		for j in range(0, img.shape[1], displace):
@@ -157,29 +157,35 @@ def sliding_window(out_img_dir, out_lab_dir, out_den_dir, img_id, img, labels, d
 						outfile.write(data)
 	return img_id
 
-def augment(img_paths, label_paths, den_paths, out_img_dir, out_lab_dir, out_den_dir, slide_window_params, noise_params, light_params, add_original = False):
+def augment(img_paths, label_paths, den_paths, out_img_dir, out_lab_dir, out_den_dir, slide_window_params, noise_params, light_params, add_original = False, **kwargs):
 	print("Augmenting data, results will be stored in '{}'".format(out_img_dir))
 	aug_img_id = 0
+	count = 0
 	for img_path, label_path, den_path in zip(img_paths, label_paths, den_paths):
+		count += 1
+		if count % 200 == 0:
+			print("imagens processadas: {}".format(count))
+			
 		img = cv2.imread(img_path)
 		den = np.load(den_path)
 		label = json.load(open(label_path))
 		
 		#sliding window for data data augmentation
-		aug_img_id = sliding_window(out_img_dir, out_lab_dir, out_den_dir, aug_img_id, img, label, den
-		, displace = slide_window_params['displace']
-		, size_x = slide_window_params['size_x']
-		, size_y = slide_window_params['size_y']
-		, people_thr = slide_window_params['people_thr'])
+		if slide_window_params["augment_sliding_window"]:
+			aug_img_id = sliding_window(out_img_dir, out_lab_dir, out_den_dir, aug_img_id, img, label, den
+				, displace = slide_window_params['displace']
+				, size_x = slide_window_params['size_x']
+				, size_y = slide_window_params['size_y']
+				, people_thr = slide_window_params['people_thr'])
 
-		if add_original:
+		if add_original or slide_window_params["augment_sliding_window"]==False:
 			#add original to augmented set
 			aug_img_id += 1
 			out_img_path = osp.join(out_img_dir, str(aug_img_id).zfill(7) + '.jpg')
 			out_lab_path = osp.join(out_lab_dir, str(aug_img_id).zfill(7) + '.json')
 			out_den_path = osp.join(out_den_dir, str(aug_img_id).zfill(7) + '.npy')
 			cv2.imwrite(out_img_path, img)
-			npy.save(out_den_path, den)
+			np.save(out_den_path, den)
 			label = json_to_string(label)
 			with open(out_lab_path, 'w') as outfile:
 				outfile.write(label)

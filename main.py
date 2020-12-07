@@ -20,7 +20,7 @@ from manage_data.utils import Logger, mkdir_if_missing
 parser = argparse.ArgumentParser(description='Multi-stream crowd counting')
 # Datasets
 parser.add_argument('-d', '--dataset', type=str, default='ucf-cc-50',
-                    choices=dataset_loader.get_names(),  help="dasaset 'ucf-cc-50', 'shanghai-tech'. Default, 'ucf-cc-50'")
+                    choices=dataset_loader.get_names(),  help="dasaset 'ucf-cc-50', 'shanghai-tech', 'jhu_crowd'. Default, 'ucf-cc-50'")
 #Data augmentation hyperpameters
 parser.add_argument('--force-den-maps', action='store_true', help="force generation of density maps for original dataset, by default it is generated only once")
 parser.add_argument('--force-augment', action='store_true', help="force generation of augmented data, by default it is generated only once")
@@ -30,6 +30,7 @@ parser.add_argument('--size-y', default=256, type=int, help="height of sliding w
 parser.add_argument('--people-thr', default=0, type=int, help="minimum quantitie of people in each sliding window in data augmentation, default 0")
 parser.add_argument('--not-augment-noise', action='store_true', help="use noise for data augmetnation, default True")
 parser.add_argument('--not-augment-light', action='store_true', help="use bright & contrast for data augmetnation, default True")
+parser.add_argument('--not-augment-sliding-window', action='store_true', help="use bright & contrast for data augmetnation, default True")
 parser.add_argument('--bright', default=10, type=int, help="bright value for bright & contrast augmentation, defaul 10")
 parser.add_argument('--contrast', default=10, type=int, help="contrast value for bright & contrast augmentation, defaul 10")
 parser.add_argument('--gt-mode', type=str, default='same', help="mode for generation of ground thruth  ['same', 'face', 'knn'] (default 'same')")
@@ -51,6 +52,8 @@ parser.add_argument('--save-dir', type=str, default='log', help="path where resu
 parser.add_argument('--units', type=str, default='', help="folds/parts units to be trained, be default all folds/parts are trained")
 parser.add_argument('--augment-only', action='store_true', help="run only data augmentation, default False")
 parser.add_argument('--evaluate-only', action='store_true', help="run only data validation, --resume arg is needed, default False")
+parser.add_argument('--train-only', action='store_true', help="train only, default False")
+parser.add_argument('--skip-dir-check', action='store_true', help="skip directory validation and assumes that all data is already prepared, default False")
 parser.add_argument('--save-plots', action='store_true', help="save plots of density map estimation (done only in test step), default False")
 parser.add_argument('--den-scale-factor', type=float, default=1e3, help="scale factor to increasse small values in density maps")
 
@@ -202,13 +205,16 @@ def main():
     force_augmentation = True if args.force_augment else False
     augment_noise = False if args.not_augment_noise else True 
     augment_light = False if args.not_augment_light else True
+    augment_sliding_window = False if args.not_augment_sliding_window else True
     augment_only = True if args.augment_only else False
-
+    train_only = True if args.train_only else False
+    skip_dir_check = True if args.skip_dir_check else False
 
     dataset = dataset_loader.init_dataset(name=args.dataset
     , force_create_den_maps = force_create_den_maps
     , force_augmentation = force_augmentation
     #sliding windows params
+    , augment_sliding_window = augment_sliding_window
     , gt_mode = args.gt_mode
     , displace = args.displace
     , size_x= args.size_x
@@ -219,7 +225,10 @@ def main():
     #light_params
     , augment_light = augment_light
     , bright = args.bright
-    , contrast = args.contrast)
+    , contrast = args.contrast
+    #skip some directory validation
+    , skip_dir_check = args.skip_dir_check
+    )
 
     if augment_only:
         set_units = [unit.metadata['name'] for unit in dataset.train_test_set]
@@ -249,8 +258,9 @@ def main():
             else:
                 print("Training {}".format(train_test.metadata['name']))
                 train(train_test, out_dir_root)
-                print("Testing {}".format(train_test.metadata['name']))
-                test(train_test, out_dir_root)
+                if not(train_only):
+                    print("Testing {}".format(train_test.metadata['name']))
+                    test(train_test, out_dir_root)
 
 if __name__ == '__main__':
     main()    

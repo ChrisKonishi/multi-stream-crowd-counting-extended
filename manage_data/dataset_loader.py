@@ -111,7 +111,7 @@ class UCF_CC_50(object):
         return "_".join(["{}_{}".format(sign_elem, self.metadata[sign_elem]) for sign_elem in self.signature_args])
 
     def _create_train_test(self, force_augmentation, kwargs):
-        slide_window_params = {'displace' : kwargs['displace'], 'size_x' : kwargs['size_x'], 'size_y' : kwargs['size_y'], 'people_thr' : kwargs['people_thr']}
+        slide_window_params = {'augment_sliding_window' : kwargs['augment_sliding_window'] ,'displace' : kwargs['displace'], 'size_x' : kwargs['size_x'], 'size_y' : kwargs['size_y'], 'people_thr' : kwargs['people_thr']}
         noise_params = {'augment_noise' : kwargs['augment_noise']}
         light_params = {'augment_light' : kwargs['augment_light'], 'bright' : kwargs['bright'], 'contrast' : kwargs['contrast']}
 
@@ -329,7 +329,7 @@ class ShanghaiTech(object):
         return "_".join(["{}_{}".format(sign_elem, self.metadata[sign_elem]) for sign_elem in self.signature_args])
 
     def _create_train_test(self, force_augmentation, kwargs):
-        slide_window_params = {'displace' : kwargs['displace'], 'size_x' : kwargs['size_x'], 'size_y' : kwargs['size_y'], 'people_thr' : kwargs['people_thr']}
+        slide_window_params = {'augment_sliding_window' : kwargs['augment_sliding_window'] ,'displace' : kwargs['displace'], 'size_x' : kwargs['size_x'], 'size_y' : kwargs['size_y'], 'people_thr' : kwargs['people_thr']}
         noise_params = {'augment_noise' : kwargs['augment_noise']}
         light_params = {'augment_light' : kwargs['augment_light'], 'bright' : kwargs['bright'], 'contrast' : kwargs['contrast']}
 
@@ -453,10 +453,11 @@ class JhuCrowd(object):
     train_test_size = 1
 
     def __init__(self, force_create_den_maps = False, force_augmentation = False, **kwargs):
-        self._check_before_run()
         self.metadata = kwargs
-        self._create_labels()
-        self._create_original_density_maps(force_create_den_maps)
+        if not(self.metadata["skip_dir_check"]):
+            self._check_before_run()
+            self._create_labels()
+            self._create_original_density_maps(force_create_den_maps)
         self._create_train_test(force_augmentation, **kwargs)
 
 
@@ -486,13 +487,13 @@ class JhuCrowd(object):
 
         #convert csv to json
         if len(os.listdir(self.ori_train_gt)) != len(os.listdir(self.ori_train_lab)):
-            _csv_to_json(self.ori_train_gt, self.ori_train_lab)
+            self._csv_to_json(self.ori_train_gt, self.ori_train_lab)
 
         if len(os.listdir(self.ori_val_gt)) != len(os.listdir(self.ori_val_lab)):
-            _csv_to_json(self.ori_val_gt, self.ori_val_lab)
+            self._csv_to_json(self.ori_val_gt, self.ori_val_lab)
 
         if len(os.listdir(self.ori_test_gt)) != len(os.listdir(self.ori_test_lab)):
-            _csv_to_json(self.ori_test_gt, self.ori_test_lab)
+            self._csv_to_json(self.ori_test_gt, self.ori_test_lab)
 
 
     def _csv_to_json(self, src, tgt):
@@ -535,7 +536,7 @@ class JhuCrowd(object):
         return "_".join(["{}_{}".format(sign_elem, self.metadata[sign_elem]) for sign_elem in self.signature_args])
     
     def _create_train_test(self, force_augmentation, **kwargs):
-        slide_window_params = {'displace' : kwargs['displace'], 'size_x' : kwargs['size_x'], 'size_y' : kwargs['size_y'], 'people_thr' : kwargs['people_thr']}
+        slide_window_params = {'augment_sliding_window' : kwargs['augment_sliding_window'] , 'displace' : kwargs['displace'], 'size_x' : kwargs['size_x'], 'size_y' : kwargs['size_y'], 'people_thr' : kwargs['people_thr']}
         noise_params = {'augment_noise' : kwargs['augment_noise']}
         light_params = {'augment_light' : kwargs['augment_light'], 'bright' : kwargs['bright'], 'contrast' : kwargs['contrast']}
 
@@ -584,7 +585,7 @@ class JhuCrowd(object):
         kwargs["val_dir_den"] = val_dir_den
         train_test = train_test_unit(aug_dir_train_img, aug_dir_train_den, test_dir_img, test_dir_den, kwargs.copy())
 
-        if augment_data:
+        if augment_data and not(kwargs["skip_dir_check"]):
             ori_img_paths = [osp.join(self.ori_train_img, file_name) for file_name in sorted(os.listdir(self.ori_train_img))]
             ori_lab_paths = [osp.join(self.ori_train_lab, file_name) for file_name in sorted(os.listdir(self.ori_train_lab))]
             ori_den_paths = [osp.join(self.ori_train_den, file_name) for file_name in sorted(os.listdir(self.ori_train_den))]
