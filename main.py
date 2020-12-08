@@ -63,7 +63,10 @@ def train(train_test_unit, out_dir_root):
     mkdir_if_missing(output_dir)
     output_dir_model = osp.join(output_dir, 'models')
     mkdir_if_missing(output_dir_model)
-    sys.stdout = Logger(osp.join(output_dir, 'log_train.txt'))
+    if args.resume:
+        sys.stdout = Logger(osp.join(output_dir, 'log_train.txt', mode='a'))
+    else:
+        sys.stdout = Logger(osp.join(output_dir, 'log_train.txt'))
     print("==========\nArgs:{}\n==========".format(args))
 
     dataset_name = train_test_unit.metadata['name']
