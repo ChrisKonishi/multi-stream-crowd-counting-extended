@@ -103,9 +103,9 @@ def train(train_test_unit, out_dir_root):
         else:
             resume_dir = osp.join(args.resume, train_test_unit.metadata['name'])
             pretrained_model = osp.join(resume_dir, 'best_model.h5')
-            f = open(osp.join(resume_dir, "best_mae.bin"), "rb")
-            best_mae = pickle.load(f)
-            print("Best MAE: {0:.4f}".format(best_mae))
+            f = open(osp.join(resume_dir, "best_values.bin"), "rb")
+            best_mae, best_mse, best_model = pickle.load(f)
+            print("Best MAE: {0:.4f}, Best MSE: {1:.4f}, Best model: {2}".format(best_mae, best_mse, best_model))
             f.close()
         network.load_net(pretrained_model, net)
         print('Will apply fine tunning over', pretrained_model)
@@ -169,8 +169,8 @@ def train(train_test_unit, out_dir_root):
             best_mse = mse
             best_model = '{}_{}_{}.h5'.format(train_test_unit.to_string(),dataset_name,epoch)
             network.save_net(os.path.join(output_dir, "best_model.h5"), net)
-            f = open(os.path.join(output_dir, "best_mae.bin"), "wb")
-            pickle.dump(best_mae, f)
+            f = open(os.path.join(output_dir, "best_values.bin"), "wb")
+            pickle.dump((best_mae, best_mse, best_model), f)
             f.close()
 
 
