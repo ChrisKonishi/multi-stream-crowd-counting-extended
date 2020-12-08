@@ -46,6 +46,7 @@ class Logger(object):
     def __init__(self, fpath=None):
         self.console = sys.stdout
         self.file = None
+        self.fpath = fpath
         if fpath is not None:
             mkdir_if_missing(os.path.dirname(fpath))
             self.file = open(fpath, 'w')
@@ -63,6 +64,9 @@ class Logger(object):
         self.console.write(msg)
         if self.file is not None:
             self.file.write(msg)
+            self.file.close()
+            self.file = open(self.fpath, 'a')
+
 
     def flush(self):
         self.console.flush()
