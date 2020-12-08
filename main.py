@@ -102,6 +102,7 @@ def train(train_test_unit, out_dir_root):
             pretrained_model = osp.join(resume_dir, 'best_model.h5')
             f = open(osp.join(resume_dir, "best_mae.bin"), "rb")
             best_mae = pickle.load(f)
+            print("Best MAE: {0:.4f}".format(best_mae))
             f.close()
         network.load_net(pretrained_model, net)
         print('Will apply fine tunning over', pretrained_model)
