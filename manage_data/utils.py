@@ -64,8 +64,6 @@ class Logger(object):
         self.console.write(msg)
         if self.file is not None:
             self.file.write(msg)
-            self.file.close()
-            self.file = open(self.fpath, 'a')
 
 
     def flush(self):
