@@ -44,6 +44,8 @@ parser.add_argument('--lr', '--learning-rate', default=0.00001, type=float,
                     help="initial learning rate")
 parser.add_argument('--train-batch', default=32, type=int,
                     help="train batch size (default 32)")
+parser.add_argument('--patience', default=-1, type=int,
+                    help="number of epochs without model improvement (-1 to disable it)")
 # Miscs
 parser.add_argument('--seed', type=int, default=64678, help="manual seed")
 parser.add_argument('--resume', type=str, default='', metavar='PATH', help="root directory where part/fold of previous train are saved")
@@ -91,6 +93,7 @@ def train(train_test_unit, out_dir_root):
         torch.cuda.manual_seed(rand_seed)
 
     best_mae = sys.maxsize # best mae
+    current_patience = 0
 
     # load net
     net = CrowdCounter(model = args.model)
@@ -98,14 +101,14 @@ def train(train_test_unit, out_dir_root):
         network.weights_normal_init(net, dev=0.01)
 
     else:
-        if args.resume[-3:] == '.h5':
+        if args.resume[-3:] == '.h5': #don't use it
             pretrained_model = args.resume
         else:
             resume_dir = osp.join(args.resume, train_test_unit.metadata['name'])
             pretrained_model = osp.join(resume_dir, 'best_model.h5')
             f = open(osp.join(resume_dir, "best_values.bin"), "rb")
-            best_mae, best_mse, best_model = pickle.load(f)
-            print("Best MAE: {0:.4f}, Best MSE: {1:.4f}, Best model: {2}".format(best_mae, best_mse, best_model))
+            best_mae, best_mse, best_model, current_patience = pickle.load(f)
+            print("Best MAE: {0:.4f}, Best MSE: {1:.4f}, Best model: {2}, Current patience: {3}".format(best_mae, best_mse, best_model, current_patience))
             f.close()
         network.load_net(pretrained_model, net)
         print('Will apply fine tunning over', pretrained_model)
@@ -167,15 +170,22 @@ def train(train_test_unit, out_dir_root):
         if mae < best_mae:
             best_mae = mae
             best_mse = mse
+            current_patience = 0
             best_model = '{}_{}_{}.h5'.format(train_test_unit.to_string(),dataset_name,epoch)
             network.save_net(os.path.join(output_dir, "best_model.h5"), net)
             f = open(os.path.join(output_dir, "best_values.bin"), "wb")
-            pickle.dump((best_mae, best_mse, best_model), f)
+            pickle.dump((best_mae, best_mse, best_model, current_patience), f)
             f.close()
 
+        else:
+            current_patience += 1
 
         print("Epoch: {0}, MAE: {1:.4f}, MSE: {2:.4f}, loss: {3:.4f}".format(epoch, mae, mse, train_loss))
         print("Best MAE: {0:.4f}, Best MSE: {1:.4f}, Best model: {2}".format(best_mae, best_mse, best_model))
+        print("Patience: {0}/{1}".format(current_patience, args.patience))
+
+        if current_patience > args.patience and args.patience > -1:
+            break
 
 def test(train_test_unit, out_dir_root):
     output_dir = osp.join(out_dir_root, train_test_unit.metadata['name'])
