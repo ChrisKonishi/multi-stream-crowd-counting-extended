@@ -183,7 +183,7 @@ def train(train_test_unit, out_dir_root):
         print("Epoch: {0}, MAE: {1:.4f}, MSE: {2:.4f}, loss: {3:.4f}".format(epoch, mae, mse, train_loss))
         print("Best MAE: {0:.4f}, Best MSE: {1:.4f}, Best model: {2}".format(best_mae, best_mse, best_model))
         print("Patience: {0}/{1}".format(current_patience, args.patience))
-        sys.stdout.flush()
+        sys.stdout.close_open()
 
         if current_patience > args.patience and args.patience > -1:
             break
