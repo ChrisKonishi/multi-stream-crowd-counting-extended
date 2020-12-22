@@ -175,10 +175,6 @@ def train(train_test_unit, out_dir_root):
         network.save_net(save_name, net)
         network.save_net(os.path.join(output_dir, "last_model.h5"), net)
 
-        f = open(os.path.join(output_dir, "current_values.bin"), "wb")
-        pickle.dump(current_patience, f)
-        f.close()
-
         #calculate error on the validation dataset 
         mae,mse = evaluate_model(save_name, data_loader_val, model = args.model, save_test_results=args.save_plots, plot_save_dir=osp.join(output_dir, 'plot-results-train/'), den_scale_factor = args.den_scale_factor)
         if mae < best_mae:
@@ -193,6 +189,10 @@ def train(train_test_unit, out_dir_root):
 
         else:
             current_patience += 1
+
+        f = open(os.path.join(output_dir, "current_values.bin"), "wb")
+        pickle.dump(current_patience, f)
+        f.close()
 
         print("Epoch: {0}, MAE: {1:.4f}, MSE: {2:.4f}, loss: {3:.4f}".format(epoch, mae, mse, train_loss))
         print("Best MAE: {0:.4f}, Best MSE: {1:.4f}, Best model: {2}".format(best_mae, best_mse, best_model))
