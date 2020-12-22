@@ -49,6 +49,7 @@ parser.add_argument('--patience', default=-1, type=int,
 # Miscs
 parser.add_argument('--seed', type=int, default=64678, help="manual seed")
 parser.add_argument('--resume', type=str, default='', metavar='PATH', help="root directory where part/fold of previous train are saved")
+parser.add_argument('--last-model', action='store_true', help="if true, resume training from last model")
 parser.add_argument('--save-dir', type=str, default='log', help="path where results for each part/fold are saved")
 parser.add_argument('--units', type=str, default='', help="folds/parts units to be trained, be default all folds/parts are trained")
 parser.add_argument('--augment-only', action='store_true', help="run only data augmentation, default False")
@@ -101,15 +102,23 @@ def train(train_test_unit, out_dir_root):
         network.weights_normal_init(net, dev=0.01)
 
     else:
-        if args.resume[-3:] == '.h5': #don't use it
+        if args.resume[-3:] == '.h5': #don't use this option!
             pretrained_model = args.resume
         else:
             resume_dir = osp.join(args.resume, train_test_unit.metadata['name'])
-            pretrained_model = osp.join(resume_dir, 'best_model.h5')
+            if args.last_model:
+                pretrained_model = osp.join(resume_dir, 'last_model.h5')
+                f = open(osp.join(resume_dir, "current_values.bin"), "rb")
+                current_patience = pickle.load(f)
+                f.close()
+            else:
+                pretrained_model = osp.join(resume_dir, 'best_model.h5')
+                current_patience = 0
             f = open(osp.join(resume_dir, "best_values.bin"), "rb")
-            best_mae, best_mse, best_model, current_patience = pickle.load(f)
-            print("Best MAE: {0:.4f}, Best MSE: {1:.4f}, Best model: {2}, Current patience: {3}".format(best_mae, best_mse, best_model, current_patience))
+            best_mae, best_mse, best_model, _ = pickle.load(f)
             f.close()
+            print("Best MAE: {0:.4f}, Best MSE: {1:.4f}, Best model: {2}, Current patience: {3}".format(best_mae, best_mse, best_model, current_patience))
+                
         network.load_net(pretrained_model, net)
         print('Will apply fine tunning over', pretrained_model)
     net.cuda()
@@ -164,6 +173,11 @@ def train(train_test_unit, out_dir_root):
 
         save_name = os.path.join(output_dir_model, '{}_{}_{}.h5'.format(train_test_unit.to_string(), dataset_name,epoch))
         network.save_net(save_name, net)
+        network.save_net(os.path.join(output_dir, "last_model.h5"), net)
+
+        f = open(os.path.join(output_dir, "current_values.bin"), "wb")
+        pickle.dump(current_patience, f)
+        f.close()
 
         #calculate error on the validation dataset 
         mae,mse = evaluate_model(save_name, data_loader_val, model = args.model, save_test_results=args.save_plots, plot_save_dir=osp.join(output_dir, 'plot-results-train/'), den_scale_factor = args.den_scale_factor)
