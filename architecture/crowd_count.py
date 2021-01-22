@@ -13,7 +13,6 @@ class CrowdCounter(nn.Module):
         self.args = args
         self.kwargs = kwargs
         self.gan = False
-        self.ncritic = 0
         if model == 'mcnn1':
             self.net = MCNN_1()
         elif model == 'mcnn2':

@@ -2,7 +2,7 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 
 ndf = 64
-nc = 3
+nc = 1
 
 def weights_init(m):
     classname = m.__class__.__name__
@@ -33,10 +33,8 @@ class Discriminator64(nn.Module):
             nn.LeakyReLU(0.2, inplace=True),
             # state size. (ndf*8) x 4 x 4
             nn.Conv2d(ndf * 8, 1, 4, 1, 0, bias=False),
-            nn.Sigmoid()
         )
 
-        self.apply(weights_init)
 
     def forward(self, input):
         return self.main(input)

@@ -17,6 +17,8 @@ import argparse
 from manage_data import dataset_loader
 from manage_data.utils import Logger, mkdir_if_missing
 
+from train_gan import train_gan
+
 parser = argparse.ArgumentParser(description='Multi-stream crowd counting')
 # Datasets
 parser.add_argument('-d', '--dataset', type=str, default='ucf-cc-50',
@@ -42,6 +44,10 @@ parser.add_argument('--start-epoch', default=0, type=int,
                     help="manual epoch number (useful on restarts)")
 parser.add_argument('--lr', '--learning-rate', default=0.00001, type=float,
                     help="initial learning rate")
+parser.add_argument('--alpha', default=0.3, type=float,
+                    help="(1-alpha)*lossMSE + alpha*lossGAN")
+parser.add_argument('--ncritic', default=3, type=int,
+                    help="times to train the critic vs generator")
 parser.add_argument('--train-batch', default=32, type=int,
                     help="train batch size (default 32)")
 parser.add_argument('--patience', default=-1, type=int,
@@ -62,6 +68,11 @@ parser.add_argument('--den-scale-factor', type=float, default=1e3, help="scale f
 args = parser.parse_args()
 
 def train(train_test_unit, out_dir_root):
+    if args.model in ['mcnn4-gan']:
+        train_gan(train_test_unit, out_dir_root, args)
+        return
+        pass
+    
     output_dir = osp.join(out_dir_root, train_test_unit.metadata['name'])
     mkdir_if_missing(output_dir)
     output_dir_model = osp.join(output_dir, 'models')

@@ -4,6 +4,7 @@ import torch
 import numpy as np
 import sys
 import pickle
+import torch.nn as nn
 
 from architecture.crowd_count import CrowdCounter
 from architecture import network
@@ -16,6 +17,7 @@ import argparse
 
 from manage_data import dataset_loader
 from manage_data.utils import Logger, mkdir_if_missing
+from architecture.network import np_to_variable
 
 def train_gan(train_test_unit, out_dir_root, args):
     output_dir = osp.join(out_dir_root, train_test_unit.metadata['name'])
@@ -55,7 +57,7 @@ def train_gan(train_test_unit, out_dir_root, args):
     # load net
     net = CrowdCounter(model = args.model)
     if not args.resume :
-        network.weights_normal_init(net, dev=0.01)
+        network.weights_normal_init(net.net, dev=0.01)
 
     else:
         if args.resume[-3:] == '.h5': #don't use this option!
@@ -80,14 +82,26 @@ def train_gan(train_test_unit, out_dir_root, args):
     net.cuda()
     net.train()
 
-    optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr=lr)
+    #optmizers and loss
+    optimizerG = torch.optim.RMSprop(filter(lambda p: p.requires_grad, net.net.parameters()), lr=lr)
+    optimizerD = torch.optim.RMSprop(filter(lambda p: p.requires_grad, net.gan_net.parameters()), lr=lr)
+
+    mse_criterion = nn.MSELoss()
 
     # training
-    train_loss = 0
+    train_lossG = 0
+    train_lossD = 0
     step_cnt = 0
     re_cnt = False
     t = Timer()
     t.tic()
+
+    # gan labels
+    real_label = 1
+    fake_label = 0
+
+    netD = net.gan_net
+    netG = net.net
 
     data_loader = ImageDataLoader(train_path, train_gt_path, shuffle=True, batch_size = args.train_batch)
     data_loader_val = ImageDataLoader(val_path, val_gt_path, shuffle=False, batch_size = 1)
@@ -95,24 +109,65 @@ def train_gan(train_test_unit, out_dir_root, args):
 
     for epoch in range(start_step, end_step+1):
         step = 0
-        train_loss = 0
+        train_lossG = 0
+        train_lossD = 0
+        train_lossG_mse = 0
+        train_lossG_gan = 0
+
+
         for blob in data_loader:
-            optimizer.zero_grad()
+            optimizerG.zero_grad()
+            optimizerD.zero_grad()
             step = step + args.train_batch
             im_data = blob['data']
             gt_data = blob['gt_density']
             im_data_norm = im_data / 127.5 - 1. #normalize between -1 and 1
             gt_data *= args.den_scale_factor
 
-            density_map = net(im_data_norm, gt_data = gt_data)
-            loss = net.loss
+            im_data_norm = network.np_to_variable(im_data_norm, is_cuda=True, is_training=True)
+            gt_data = network.np_to_variable(gt_data, is_cuda=True, is_training=True)
 
-            
-            loss.backward()
-            optimizer.step()
-            train_loss += loss.data.item()
+            errD_epoch = 0
+
+            for critic_epoch in range(args.ncritic):
+                netD.zero_grad()
+                netG.zero_grad()
+
+                #real data discriminator
+                b_size = gt_data.size(0)
+                output_real = netD(gt_data).view(-1)
+
+                #fake data discriminator
+                density_map = netG(im_data_norm)
+                output_fake = netD(density_map.detach()).view(-1)
+
+                errD = -(torch.mean(output_real) - torch.mean(output_fake))
+                errD.backward()
+                optimizerD.step()
+
+                for p in netD.parameters():
+                    p.data.clamp_(-0.01, 0.01)
+
+                errD_epoch += errD.data.item()
+
+            errD_epoch /= args.ncritic
+
+            #Generator update
+            netG.zero_grad()
+            output_fake = netD(density_map).view(-1)
+            errG_gan = -torch.mean(output_fake)
+            errG_mse = mse_criterion(density_map, gt_data)
+            errG = (1-args.alpha)*errG_mse + args.alpha*errG_gan
+            errG.backward()
+            optimizerG.step()
+
+            train_lossG += errG.data.item()
+            train_lossG_mse += errG_mse.data.item()
+            train_lossG_gan += errG_gan.data.item()
+            train_lossD += errD_epoch
             density_map = density_map.data.cpu().numpy()
             density_map/=args.den_scale_factor
+            gt_data = gt_data.data.cpu().numpy()
             gt_data/=args.den_scale_factor
 
             step_cnt += 1
@@ -153,7 +208,7 @@ def train_gan(train_test_unit, out_dir_root, args):
         pickle.dump(current_patience, f)
         f.close()
 
-        print("Epoch: {0}, MAE: {1:.4f}, MSE: {2:.4f}, loss: {3:.4f}".format(epoch, mae, mse, train_loss))
+        print("Epoch: {0}, MAE: {1:.4f}, MSE: {2:.4f}, lossG: {3:.4f}, lossG_mse: {4:.4f}, lossG_gan: {5:.4f}, lossD: {6:.4f}".format(epoch, mae, mse, train_lossG, train_lossG_mse, train_lossG_gan, train_lossD))
         print("Best MAE: {0:.4f}, Best MSE: {1:.4f}, Best model: {2}".format(best_mae, best_mse, best_model))
         print("Patience: {0}/{1}".format(current_patience, args.patience))
         sys.stdout.close_open()
