@@ -40,6 +40,7 @@ def train_gan(train_test_unit, out_dir_root, args):
     start_step = args.start_epoch
     end_step = args.max_epoch
     lr = args.lr
+    lrc = args.lrc
 
     #log frequency
     disp_interval = args.train_batch*20
@@ -84,7 +85,7 @@ def train_gan(train_test_unit, out_dir_root, args):
 
     #optmizers and loss
     optimizerG = torch.optim.RMSprop(filter(lambda p: p.requires_grad, net.net.parameters()), lr=lr)
-    optimizerD = torch.optim.RMSprop(filter(lambda p: p.requires_grad, net.gan_net.parameters()), lr=lr)
+    optimizerD = torch.optim.RMSprop(filter(lambda p: p.requires_grad, net.gan_net.parameters()), lr=lrc)
 
     mse_criterion = nn.MSELoss()
 

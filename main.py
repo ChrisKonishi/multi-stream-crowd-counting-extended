@@ -44,6 +44,8 @@ parser.add_argument('--start-epoch', default=0, type=int,
                     help="manual epoch number (useful on restarts)")
 parser.add_argument('--lr', '--learning-rate', default=0.00001, type=float,
                     help="initial learning rate")
+parser.add_argument('--lrc', '--learning-rate-critic', default=0.00001, type=float,
+                    help="initial learning rate for the critic net")
 parser.add_argument('--alpha', default=0.3, type=float,
                     help="(1-alpha)*lossMSE + alpha*lossGAN")
 parser.add_argument('--ncritic', default=3, type=int,
