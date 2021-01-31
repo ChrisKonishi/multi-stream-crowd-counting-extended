@@ -157,9 +157,9 @@ def train_gan(train_test_unit, out_dir_root, args):
             netG.zero_grad()
             output_fake = netD(density_map).view(-1)
             errG_gan = -torch.mean(output_fake)
-            #errG_mse = mse_criterion(density_map, gt_data)
+            errG_mse = mse_criterion(density_map, gt_data)
             errG = (1-args.alpha)*errG_mse + args.alpha*errG_gan
-            errG = errG_mse + args.alpha*errG_gan
+            #errG = errG_mse + args.alpha*errG_gan
             errG.backward()
             optimizerG.step()
 
