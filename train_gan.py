@@ -12,6 +12,7 @@ from architecture.data_loader import ImageDataLoader
 from architecture.timer import Timer
 from architecture import utils
 from architecture.evaluate_model import evaluate_model
+from architecture.LossPlotter import LossPlotter
 
 import argparse
 
@@ -26,9 +27,13 @@ def train_gan(train_test_unit, out_dir_root, args):
     mkdir_if_missing(output_dir_model)
     if args.resume:
         sys.stdout = Logger(osp.join(output_dir, 'log_train.txt'), mode='a')
+        plotter = LossPlotter(out_dir_root, mode='a')
     else:
         sys.stdout = Logger(osp.join(output_dir, 'log_train.txt'))
+        plotter = LossPlotter(out_dir_root, mode='w')
     print("==========\nArgs:{}\n==========".format(args))
+
+    
 
     dataset_name = train_test_unit.metadata['name']
     train_path = train_test_unit.train_dir_img
@@ -209,6 +214,10 @@ def train_gan(train_test_unit, out_dir_root, args):
         f = open(os.path.join(output_dir, "current_values.bin"), "wb")
         pickle.dump(current_patience, f)
         f.close()
+
+        plotter.report(train_lossG_mse, train_lossG_gan, train_lossD)
+        plotter.save()
+        plotter.plot()
 
         print("Epoch: {0}, MAE: {1:.4f}, MSE: {2:.4f}, lossG: {3:.4f}, lossG_mse: {4:.4f}, lossG_gan: {5:.4f}, lossD: {6:.4f}".format(epoch, mae, mse, train_lossG, train_lossG_mse, train_lossG_gan, train_lossD))
         print("Best MAE: {0:.4f}, Best MSE: {1:.4f}, Best model: {2}".format(best_mae, best_mse, best_model))
