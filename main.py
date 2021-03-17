@@ -17,6 +17,8 @@ import argparse
 from manage_data import dataset_loader
 from manage_data.utils import Logger, mkdir_if_missing
 
+from train_gan import train_gan
+
 parser = argparse.ArgumentParser(description='Multi-stream crowd counting')
 # Datasets
 parser.add_argument('-d', '--dataset', type=str, default='ucf-cc-50',
@@ -33,7 +35,7 @@ parser.add_argument('--not-augment-light', action='store_true', help="use bright
 parser.add_argument('--bright', default=10, type=int, help="bright value for bright & contrast augmentation, defaul 10")
 parser.add_argument('--contrast', default=10, type=int, help="contrast value for bright & contrast augmentation, defaul 10")
 parser.add_argument('--gt-mode', type=str, default='same', help="mode for generation of ground thruth  ['same', 'face', 'knn'] (default 'same')")
-parser.add_argument('--model', type=str, default='mcnn1', help="network model  ['mcnn1', 'mcnn2', 'mcnn3', 'mcnn4'] (default 'mcnn-1')")
+parser.add_argument('--model', type=str, default='mcnn1', help="network model  ['mcnn1', 'mcnn2', 'mcnn3', 'mcnn4', 'mcnn4-gan'] (default 'mcnn-1')")
 
 # Optimization options
 parser.add_argument('--max-epoch', default=1000, type=int,
@@ -42,6 +44,12 @@ parser.add_argument('--start-epoch', default=0, type=int,
                     help="manual epoch number (useful on restarts)")
 parser.add_argument('--lr', '--learning-rate', default=0.00001, type=float,
                     help="initial learning rate")
+parser.add_argument('--lrc', '--learning-rate-critic', default=0.00001, type=float,
+                    help="initial learning rate for the critic net")
+parser.add_argument('--alpha', default=0.3, type=float,
+                    help="(1-alpha)*lossMSE + alpha*lossGAN")
+parser.add_argument('--ncritic', default=3, type=int,
+                    help="times to train the critic vs generator")
 parser.add_argument('--train-batch', default=32, type=int,
                     help="train batch size (default 32)")
 parser.add_argument('--patience', default=-1, type=int,
@@ -62,6 +70,11 @@ parser.add_argument('--den-scale-factor', type=float, default=1e3, help="scale f
 args = parser.parse_args()
 
 def train(train_test_unit, out_dir_root):
+    if args.model in ['mcnn4-gan']:
+        train_gan(train_test_unit, out_dir_root, args)
+        return
+        pass
+    
     output_dir = osp.join(out_dir_root, train_test_unit.metadata['name'])
     mkdir_if_missing(output_dir)
     output_dir_model = osp.join(output_dir, 'models')
@@ -201,6 +214,8 @@ def train(train_test_unit, out_dir_root):
 
         if current_patience > args.patience and args.patience > -1:
             break
+
+
 
 def test(train_test_unit, out_dir_root):
     output_dir = osp.join(out_dir_root, train_test_unit.metadata['name'])
