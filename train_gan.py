@@ -131,10 +131,11 @@ def train_gan(train_test_unit, out_dir_root, args):
             gt_data_a *= args.den_scale_factor
 
             errD_epoch = 0
-            gt_data = network.np_to_variable(gt_data_a, is_cuda=True, is_training=True)  
+            
             
             for critic_epoch in range(args.ncritic):
                 im_data_norm = network.np_to_variable(im_data_norm_a, is_cuda=True, is_training=True)
+                gt_data = network.np_to_variable(gt_data_a, is_cuda=True, is_training=True)  
                          
                 
                 netD.zero_grad()
