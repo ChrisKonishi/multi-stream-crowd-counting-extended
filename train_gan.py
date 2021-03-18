@@ -27,10 +27,10 @@ def train_gan(train_test_unit, out_dir_root, args):
     mkdir_if_missing(output_dir_model)
     if args.resume:
         sys.stdout = Logger(osp.join(output_dir, 'log_train.txt'), mode='a')
-        plotter = LossPlotter(out_dir_root, mode='a')
+        plotter = LossPlotter(out_dir, mode='a')
     else:
         sys.stdout = Logger(osp.join(output_dir, 'log_train.txt'))
-        plotter = LossPlotter(out_dir_root, mode='w')
+        plotter = LossPlotter(out_dir, mode='w')
     print("==========\nArgs:{}\n==========".format(args))
 
     
