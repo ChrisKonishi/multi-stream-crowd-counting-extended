@@ -33,7 +33,8 @@ class LossPlotter():
         plt.savefig(osp.join(self.path, "mse_loss.pdf"), bbox_inches='tight')
         if show:
             plt.show()
-
+        plt.close()
+            
         if self.wc_loss_list != [] and self.wg_loss_list != []:
             plt.figure(figsize=(10,5))
             plt.plot(self.wg_loss_list,label="G")
@@ -45,4 +46,4 @@ class LossPlotter():
             plt.savefig(osp.join(self.path, "w_loss.pdf"))
             if show:
                 plt.show()
-        
+            plt.close()
