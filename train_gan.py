@@ -27,10 +27,10 @@ def train_gan(train_test_unit, out_dir_root, args):
     mkdir_if_missing(output_dir_model)
     if args.resume:
         sys.stdout = Logger(osp.join(output_dir, 'log_train.txt'), mode='a')
-        plotter = LossPlotter(out_dir, mode='a')
+        plotter = LossPlotter(output_dir, mode='a')
     else:
         sys.stdout = Logger(osp.join(output_dir, 'log_train.txt'))
-        plotter = LossPlotter(out_dir, mode='w')
+        plotter = LossPlotter(output_dir, mode='w')
     print("==========\nArgs:{}\n==========".format(args))
 
     
@@ -128,7 +128,7 @@ def train_gan(train_test_unit, out_dir_root, args):
             im_data = blob['data']
             gt_data = blob['gt_density']
             im_data_norm_a = im_data / 127.5 - 1. #normalize between -1 and 1
-            gt_data_a *= args.den_scale_factor
+            gt_data_a = gt_data * args.den_scale_factor
 
             errD_epoch = 0
             
