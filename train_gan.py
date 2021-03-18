@@ -127,15 +127,16 @@ def train_gan(train_test_unit, out_dir_root, args):
             step = step + args.train_batch
             im_data = blob['data']
             gt_data = blob['gt_density']
-            im_data_norm = im_data / 127.5 - 1. #normalize between -1 and 1
-            gt_data *= args.den_scale_factor
-
-            im_data_norm = network.np_to_variable(im_data_norm, is_cuda=True, is_training=True)
-            gt_data = network.np_to_variable(gt_data, is_cuda=True, is_training=True)
+            im_data_norm_a = im_data / 127.5 - 1. #normalize between -1 and 1
+            gt_data_a *= args.den_scale_factor
 
             errD_epoch = 0
-
+            gt_data = network.np_to_variable(gt_data_a, is_cuda=True, is_training=True)  
+            
             for critic_epoch in range(args.ncritic):
+                im_data_norm = network.np_to_variable(im_data_norm_a, is_cuda=True, is_training=True)
+                         
+                
                 netD.zero_grad()
                 netG.zero_grad()
 
