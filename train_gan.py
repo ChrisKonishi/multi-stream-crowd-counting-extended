@@ -12,6 +12,7 @@ from architecture.data_loader import ImageDataLoader
 from architecture.timer import Timer
 from architecture import utils
 from architecture.evaluate_model import evaluate_model
+from architecture.LossPlotter import LossPlotter
 
 import argparse
 
@@ -26,9 +27,13 @@ def train_gan(train_test_unit, out_dir_root, args):
     mkdir_if_missing(output_dir_model)
     if args.resume:
         sys.stdout = Logger(osp.join(output_dir, 'log_train.txt'), mode='a')
+        plotter = LossPlotter(output_dir, mode='a')
     else:
         sys.stdout = Logger(osp.join(output_dir, 'log_train.txt'))
+        plotter = LossPlotter(output_dir, mode='w')
     print("==========\nArgs:{}\n==========".format(args))
+
+    
 
     dataset_name = train_test_unit.metadata['name']
     train_path = train_test_unit.train_dir_img
@@ -122,15 +127,17 @@ def train_gan(train_test_unit, out_dir_root, args):
             step = step + args.train_batch
             im_data = blob['data']
             gt_data = blob['gt_density']
-            im_data_norm = im_data / 127.5 - 1. #normalize between -1 and 1
-            gt_data *= args.den_scale_factor
-
-            im_data_norm = network.np_to_variable(im_data_norm, is_cuda=True, is_training=True)
-            gt_data = network.np_to_variable(gt_data, is_cuda=True, is_training=True)
+            im_data_norm_a = im_data / 127.5 - 1. #normalize between -1 and 1
+            gt_data_a = gt_data * args.den_scale_factor
 
             errD_epoch = 0
-
+            
+            
             for critic_epoch in range(args.ncritic):
+                im_data_norm = network.np_to_variable(im_data_norm_a, is_cuda=True, is_training=True)
+                gt_data = network.np_to_variable(gt_data_a, is_cuda=True, is_training=True)  
+                         
+                
                 netD.zero_grad()
                 netG.zero_grad()
 
@@ -209,6 +216,10 @@ def train_gan(train_test_unit, out_dir_root, args):
         f = open(os.path.join(output_dir, "current_values.bin"), "wb")
         pickle.dump(current_patience, f)
         f.close()
+
+        plotter.report(train_lossG_mse, train_lossG_gan, train_lossD)
+        plotter.save()
+        plotter.plot()
 
         print("Epoch: {0}, MAE: {1:.4f}, MSE: {2:.4f}, lossG: {3:.4f}, lossG_mse: {4:.4f}, lossG_gan: {5:.4f}, lossD: {6:.4f}".format(epoch, mae, mse, train_lossG, train_lossG_mse, train_lossG_gan, train_lossD))
         print("Best MAE: {0:.4f}, Best MSE: {1:.4f}, Best model: {2}".format(best_mae, best_mse, best_model))
