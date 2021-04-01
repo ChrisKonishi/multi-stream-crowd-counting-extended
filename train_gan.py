@@ -13,6 +13,7 @@ from architecture.timer import Timer
 from architecture import utils
 from architecture.evaluate_model import evaluate_model
 from architecture.LossPlotter import LossPlotter
+from architecture.radam import RAdam
 
 import argparse
 
@@ -89,8 +90,10 @@ def train_gan(train_test_unit, out_dir_root, args):
     net.train()
 
     #optmizers and loss
-    optimizerG = torch.optim.RMSprop(filter(lambda p: p.requires_grad, net.net.parameters()), lr=lr)
-    optimizerD = torch.optim.RMSprop(filter(lambda p: p.requires_grad, net.gan_net.parameters()), lr=lrc)
+    #optimizerG = torch.optim.RMSprop(filter(lambda p: p.requires_grad, net.net.parameters()), lr=lr)
+    #optimizerD = torch.optim.RMSprop(filter(lambda p: p.requires_grad, net.gan_net.parameters()), lr=lrc)
+    optimizerG = RAdam(filter(lambda p: p.requires_grad, net.net.parameters()), lr=lr)
+    optimizerD = RAdam(filter(lambda p: p.requires_grad, net.gan_net.parameters()), lr=lrc)
 
     mse_criterion = nn.MSELoss()
 
