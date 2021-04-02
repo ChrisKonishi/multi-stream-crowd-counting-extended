@@ -61,8 +61,14 @@ def train_gan(train_test_unit, out_dir_root, args):
     best_mae = sys.maxsize # best mae
     current_patience = 0
 
-    # load net
+    mse_criterion = nn.MSELoss()
+
+    # load net and optimizer
     net = CrowdCounter(model = args.model)
+    #optimizerG = torch.optim.RMSprop(filter(lambda p: p.requires_grad, net.net.parameters()), lr=lr)
+    #optimizerD = torch.optim.RMSprop(filter(lambda p: p.requires_grad, net.gan_net.parameters()), lr=lrc)
+    optimizerG = RAdam(filter(lambda p: p.requires_grad, net.net.parameters()), lr=lr)
+    optimizerD = RAdam(filter(lambda p: p.requires_grad, net.gan_net.parameters()), lr=lrc)
     if not args.resume :
         network.weights_normal_init(net.net, dev=0.01)
 
@@ -76,6 +82,9 @@ def train_gan(train_test_unit, out_dir_root, args):
                 f = open(osp.join(resume_dir, "current_values.bin"), "rb")
                 current_patience = pickle.load(f)
                 f.close()
+                f = torch.load(osp.join(resume_dir, 'optimizer.pth'))
+                optimizerD.load_state_dict(f['opt_d'])
+                optimizerG.load_state_dict(f['opt_g'])
             else:
                 pretrained_model = osp.join(resume_dir, 'best_model.h5')
                 current_patience = 0
@@ -88,14 +97,6 @@ def train_gan(train_test_unit, out_dir_root, args):
         print('Will apply fine tunning over', pretrained_model)
     net.cuda()
     net.train()
-
-    #optmizers and loss
-    #optimizerG = torch.optim.RMSprop(filter(lambda p: p.requires_grad, net.net.parameters()), lr=lr)
-    #optimizerD = torch.optim.RMSprop(filter(lambda p: p.requires_grad, net.gan_net.parameters()), lr=lrc)
-    optimizerG = RAdam(filter(lambda p: p.requires_grad, net.net.parameters()), lr=lr)
-    optimizerD = RAdam(filter(lambda p: p.requires_grad, net.gan_net.parameters()), lr=lrc)
-
-    mse_criterion = nn.MSELoss()
 
     # training
     train_lossG = 0
@@ -197,9 +198,17 @@ def train_gan(train_test_unit, out_dir_root, args):
                 t.tic()
                 re_cnt = False
 
+        #save model and optimizer
         save_name = os.path.join(output_dir_model, '{}_{}_{}.h5'.format(train_test_unit.to_string(), dataset_name,epoch))
         network.save_net(save_name, net)
         network.save_net(os.path.join(output_dir, "last_model.h5"), net)
+        torch.save(
+            {
+                "opt_d": optimizerD.state_dict()
+                , "opt_g": optimizerG.state_dict()
+            }
+            , os.path.join(output_dir, "optimizer.pth")
+        )
 
         #calculate error on the validation dataset 
         mae,mse = evaluate_model(save_name, data_loader_val, model = args.model, save_test_results=args.save_plots, plot_save_dir=osp.join(output_dir, 'plot-results-train/'), den_scale_factor = args.den_scale_factor)
