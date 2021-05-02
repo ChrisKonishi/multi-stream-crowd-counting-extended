@@ -115,3 +115,5 @@ venv.bak/
 
 *.zip
 tiny_faces/hr101-symbol.json
+log/
+logs/
