@@ -9,10 +9,11 @@ import pandas as pd
 
 
 class ImageDataLoader():
-    def __init__(self, data_path, gt_path, shuffle=False, batch_size = 1):
+    def __init__(self, data_path, gt_path, shuffle=False, batch_size = 1, den_scale=0.25):
         self.data_path = data_path
         self.gt_path = gt_path
         self.batch_size = batch_size
+        self.den_scale = den_scale
         self.data_files = [filename for filename in os.listdir(data_path) \
                            if os.path.isfile(os.path.join(data_path,filename)) and os.path.splitext(filename)[1] == '.jpg']
         self.data_files.sort()
@@ -46,8 +47,8 @@ class ImageDataLoader():
                 den  = den.astype(np.float32, copy=False)
                 ht = img.shape[1]
                 wd = img.shape[2]
-                wd_1 = (int)(wd/4)
-                ht_1 = (int)(ht/4)
+                wd_1 = (int)(wd*self.den_scale)
+                ht_1 = (int)(ht*self.den_scale)
                 den = cv2.resize(den,(wd_1,ht_1))
                 den = den * ((wd*ht)/(wd_1*ht_1)) #fix people count
                 
