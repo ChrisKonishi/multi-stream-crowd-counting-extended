@@ -40,9 +40,8 @@ class Discriminator64(nn.Module):
         return self.main(input)
 
 class Discriminator256(nn.Module):
-    def __init__(self, ngpu):
+    def __init__(self):
         super(Discriminator256, self).__init__()
-        self.ngpu = ngpu
         self.main = nn.Sequential(
             # input is (nc) x 256 x 256
             nn.Conv2d(nc, ndf, 4, 2, 1, bias=False),

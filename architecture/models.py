@@ -119,7 +119,7 @@ class MCNN_4(nn.Module):
 
 class MCNN_4_up(nn.Module):
     def __init__(self, bn=False):
-        super(MCNN_4, self).__init__()
+        super(MCNN_4_up, self).__init__()
         self.branch0 = nn.Sequential(Conv2d( 1, 12, 11, same_padding=True, bn=bn),
                                      nn.MaxPool2d(2),
                                      Conv2d(12, 24, 9, same_padding=True, bn=bn),
