@@ -145,7 +145,7 @@ class MCNN_4_up(nn.Module):
                                      Conv2d(48, 24, 3, same_padding=True, bn=bn),
                                      Conv2d(24, 12, 3, same_padding=True, bn=bn))
         self.fuse = nn.Sequential(Conv2d( 36, 18, 1, same_padding=True, bn=bn))
-        self.upsample = nn.Sequential(
+        self.upscale = nn.Sequential(
             ConvTranspose2d(18, 9, 4, bn=bn)
             , ConvTranspose2d(9, 1, 4, bn=False)
         )
@@ -157,5 +157,5 @@ class MCNN_4_up(nn.Module):
         x3 = self.branch3(im_data)
         x = torch.cat((x0,x1,x2,x3),1)
         x = self.fuse(x)
-        x = self.upsample(x)
+        x = self.upscale(x)
         return x
