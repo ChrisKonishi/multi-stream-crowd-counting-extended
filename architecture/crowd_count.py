@@ -3,8 +3,8 @@ from __future__ import division
 
 import torch.nn as nn
 import architecture.network as network
-from architecture.models import MCNN_1, MCNN_2, MCNN_3, MCNN_4
-from architecture.GANNet import Discriminator64
+from architecture.models import MCNN_1, MCNN_2, MCNN_3, MCNN_4, MCNN_4_up
+from architecture.GANNet import Discriminator64, Discriminator256
 
 class CrowdCounter(nn.Module):
     def __init__(self, model = 'mcnn1', *args, **kwargs):
@@ -22,8 +22,8 @@ class CrowdCounter(nn.Module):
         elif model == 'mcnn4':
             self.net = MCNN_4()
         elif model == 'mcnn4-gan':
-            self.net = MCNN_4()
-            self.gan_net = Discriminator64()
+            self.net = MCNN_4_up()
+            self.gan_net = Discriminator256()
             self.gan = True
         else:
             raise RuntimeError("Invalid model: '{}'".format(model))

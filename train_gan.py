@@ -113,8 +113,8 @@ def train_gan(train_test_unit, out_dir_root, args):
     netD = net.gan_net
     netG = net.net
 
-    data_loader = ImageDataLoader(train_path, train_gt_path, shuffle=True, batch_size = args.train_batch)
-    data_loader_val = ImageDataLoader(val_path, val_gt_path, shuffle=False, batch_size = 1)
+    data_loader = ImageDataLoader(train_path, train_gt_path, shuffle=True, batch_size = args.train_batch, den_scale=1)
+    data_loader_val = ImageDataLoader(val_path, val_gt_path, shuffle=False, batch_size = 1, den_scale=1)
     
 
     for epoch in range(start_step, end_step+1):
