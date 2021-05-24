@@ -207,10 +207,11 @@ class MCNN_4_skip_conn(nn.Module):
             , Conv2d(48, 24, 3, same_padding=True, bn=bn)
             , Conv2d(24, 12, 3, same_padding=True, bn=bn)
         )
-
+        self.reduce_chn_2 = Conv2d(72, 12, 1, same_padding=True, bn=bn)
+        self.reduce_chn_1 = Conv2d(144, 24, 1, same_padding=True, bn=bn)
         self.fuse = nn.Sequential(Conv2d( 36, 24, 1, same_padding=True, bn=bn))
-        self.up_1 = Upsample(24, 24, 144, 12)
-        self.up_2 = Upsample(12, 8, 72, 6)
+        self.up_1 = Upsample(24, 24, 24, 12)
+        self.up_2 = Upsample(12, 12, 12, 6)
         self.out = Conv2d(6, 1, 1, same_padding=True, bn=False, relu=True)
 
 
@@ -234,8 +235,11 @@ class MCNN_4_skip_conn(nn.Module):
         x = torch.cat((x0_2,x1_2,x2_2,x3_2),1)
         x = self.fuse(x)
 
-        x = self.up_1(x, x0_1, x1_1, x2_1, x3_1)
-        x = self.up_2(x, x0_0, x1_0, x2_0, x3_0)
+        x_1 = self.reduce_chn_1(torch.cat((x0_1, x1_1, x2_1, x3_1),1))
+        x_2 = self.reduce_chn_2(torch.cat((x0_0, x1_0, x2_0, x3_0),1))
+
+        x = self.up_1(x, x_1)
+        x = self.up_2(x, x_2)
         x = self.out(x)
 
         return x
