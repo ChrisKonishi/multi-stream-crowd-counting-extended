@@ -38,6 +38,17 @@ class ConvTranspose2d(nn.Module):
         return x
 
 
+class Upsample(nn.Module):
+    def __init__(self, in_channels, middle_channels, skip_channels, out_channels, bn=True):
+        super().__init__()
+        self.up = ConvTranspose2d(in_channels, middle_channels, 2, padding=0, bn=bn)
+        self.conv = Conv2d(middle_channels+skip_channels, out_channels, 3, same_padding=True, bn=bn)
+
+    def forward(self, x, *args):
+        x = self.up(x)
+        x = torch.cat((x, *args), 1)
+        return self.conv(x)
+
 class FC(nn.Module):
     def __init__(self, in_features, out_features, relu=True):
         super(FC, self).__init__()
