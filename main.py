@@ -35,7 +35,7 @@ parser.add_argument('--not-augment-light', action='store_true', help="use bright
 parser.add_argument('--bright', default=10, type=int, help="bright value for bright & contrast augmentation, defaul 10")
 parser.add_argument('--contrast', default=10, type=int, help="contrast value for bright & contrast augmentation, defaul 10")
 parser.add_argument('--gt-mode', type=str, default='same', help="mode for generation of ground thruth  ['same', 'face', 'knn'] (default 'same')")
-parser.add_argument('--model', type=str, default='mcnn1', help="network model  ['mcnn1', 'mcnn2', 'mcnn3', 'mcnn4', 'mcnn4-gan', 'mcnn4-gan-skip'] (default 'mcnn1')")
+parser.add_argument('--model', type=str, default='mcnn1', help="network model  ['mcnn1', 'mcnn2', 'mcnn3', 'mcnn4', 'mcnn4-gan', 'mcnn4-gan-skip', mcnn4-gan-u] (default 'mcnn1')")
 
 # Optimization options
 parser.add_argument('--max-epoch', default=1000, type=int,
@@ -70,10 +70,9 @@ parser.add_argument('--den-scale-factor', type=float, default=1e3, help="scale f
 args = parser.parse_args()
 
 def train(train_test_unit, out_dir_root):
-    if args.model in ['mcnn4-gan', 'mcnn4-gan-skip']:
+    if args.model in ['mcnn4-gan', 'mcnn4-gan-skip', 'mcnn4-gan-u']:
         train_gan(train_test_unit, out_dir_root, args)
         return
-        pass
     
     output_dir = osp.join(out_dir_root, train_test_unit.metadata['name'])
     mkdir_if_missing(output_dir)

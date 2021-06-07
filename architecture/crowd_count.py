@@ -3,7 +3,7 @@ from __future__ import division
 
 import torch.nn as nn
 import architecture.network as network
-from architecture.models import MCNN_1, MCNN_2, MCNN_3, MCNN_4, MCNN_4_up, MCNN_4_skip_conn
+from architecture.models import MCNN_1, MCNN_2, MCNN_3, MCNN_4, MCNN_4_up, MCNN_4_skip_conn, MCNN4_U
 from architecture.GANNet import Discriminator64, Discriminator256
 
 class CrowdCounter(nn.Module):
@@ -27,6 +27,10 @@ class CrowdCounter(nn.Module):
             self.gan = True
         elif model == 'mcnn4-gan-skip':
             self.net = MCNN_4_skip_conn()
+            self.gan_net = Discriminator256()
+            self.gan = True
+        elif model == 'mcnn4-gan-u':
+            self.net = MCNN4_U()
             self.gan_net = Discriminator256()
             self.gan = True
         else:

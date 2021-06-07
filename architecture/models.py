@@ -7,6 +7,7 @@ from torch.nn import functional as F
 from architecture.network import Conv2d, ConvTranspose2d, Upsample
 import torchvision
 import numpy as np
+from architecture.model_column import Column_U
 
 class MCNN_1(nn.Module):
     def __init__(self, bn=False):
@@ -162,6 +163,7 @@ class MCNN_4_up(nn.Module):
 
 
 class MCNN_4_skip_conn(nn.Module):
+    #1st implementatio of skip-connection
     def __init__(self, bn=False):
         super().__init__()
         self.branch0_0 = Conv2d( 1, 12, 11, same_padding=True, bn=bn)
@@ -242,4 +244,24 @@ class MCNN_4_skip_conn(nn.Module):
         x = self.up_2(x, x_2)
         x = self.out(x)
 
+        return x
+
+
+class MCNN4_U(nn.Module):
+    def __init__(self, bn=False):
+        super().__init__()
+        self.branch0 = Column_U(9, 12, bn=bn)
+        self.branch1 = Column_U(7, 16, bn=bn)
+        self.branch2 = Column_U(5, 20, bn=bn)
+        self.branch3 = Column_U(3, 24, bn=bn)
+
+        self.fuse = Conv2d(18, 1, 1, relu=True, same_padding=True, bn=bn)
+
+    def forward(self, x):
+        x0 = self.branch0(x)
+        x1 = self.branch1(x)
+        x2 = self.branch2(x)
+        x3 = self.branch3(x)
+
+        x = self.fuse(torch.cat((x0, x1, x2, x3), 1))
         return x
