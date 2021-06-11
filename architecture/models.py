@@ -255,7 +255,12 @@ class MCNN4_U(nn.Module):
         self.branch2 = Column_U(5, 20, bn=bn)
         self.branch3 = Column_U(3, 24, bn=bn)
 
-        self.fuse = Conv2d(18, 1, 1, relu=True, same_padding=True, bn=bn)
+        #self.fuse = Conv2d(18, 1, 1, relu=True, same_padding=True, bn=bn)
+        self.output = nn.Sequential (
+                                        Conv2d(18, 9, 3, relu=True, same_padding=True, bn=bn)
+                                        , Conv2d(9, 4, 3, relu=True, same_padding=True, bn=bn)
+                                        , Conv2d(4, 1, 3, relu=True, same_padding=True, bn=bn)
+                                    )
 
     def forward(self, x):
         x0 = self.branch0(x)
@@ -263,5 +268,6 @@ class MCNN4_U(nn.Module):
         x2 = self.branch2(x)
         x3 = self.branch3(x)
 
-        x = self.fuse(torch.cat((x0, x1, x2, x3), 1))
+        x = self.output(torch.cat((x0, x1, x2, x3), 1))
+        #x = self.fuse(torch.cat((x0, x1, x2, x3), 1))
         return x
