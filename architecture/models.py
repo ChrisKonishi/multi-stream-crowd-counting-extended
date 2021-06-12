@@ -257,7 +257,8 @@ class MCNN4_U(nn.Module):
 
         #self.fuse = Conv2d(18, 1, 1, relu=True, same_padding=True, bn=bn)
         self.output = nn.Sequential (
-                                        Conv2d(18, 9, 3, relu=True, same_padding=True, bn=bn)
+                                        Conv2d(18, 18, 1, relu=True, same_padding=True, bn=bn)
+                                        , Conv2d(18, 9, 3, relu=True, same_padding=True, bn=bn)
                                         , Conv2d(9, 4, 3, relu=True, same_padding=True, bn=bn)
                                         , Conv2d(4, 1, 3, relu=True, same_padding=True, bn=bn)
                                     )
